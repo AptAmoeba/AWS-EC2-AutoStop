@@ -1,5 +1,5 @@
 # AWS-EC2-AutoStop
-Scheduled task created to automatically stop an EC2 instance by monitoring Event logs for RDP disconnects & pairing them with the associated EC2 account; prudent to reconnects.
+Scheduled task created to automatically stop an EC2 instance by monitoring Event logs for RDP disconnects & pairing them with the associated EC2 account; prudent to reconnects (and reboot safe!).
 
 &nbsp;
 
