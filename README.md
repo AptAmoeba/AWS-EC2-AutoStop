@@ -4,7 +4,7 @@ Scheduled task created to automatically stop an EC2 instance by monitoring Event
 &nbsp;
 
 ## Description
-This is a Scheduled task which triggers on Event ID 24 (RDP Disconnect), which runs a powershell script that compares the most recent disconnect user to the EC2 connect user that you specify ($U; Default: Administrator).<br> The script waits for 4 minutes as a grace period to reconnect (auto-aborting if it detects Event ID 25 for $U), otherwise it shuts the EC2 down.  
+This is a Scheduled task that triggers on Event ID 24 (RDP Disconnect), which runs a powershell script that compares the most recent disconnect user to the EC2 connect user that you specify ($U; Default: Administrator).<br> The script waits for 4 minutes as a grace period to reconnect (auto-aborting if it detects Event ID 25 for $U), otherwise it shuts the EC2 down.  
 
 ### Installation:
 Download the EC2-AutoStop XML file, then do the following:
@@ -18,16 +18,16 @@ Download the EC2-AutoStop XML file, then do the following:
 ```Powershell
 #-Command "
 $U = 'Administrator';
-$Fname = $Fname = $env:COMPUTERNAME + "\" + $U;
+$Fname = $env:COMPUTERNAME + "\" + $U;
 $event24 = (Get-WinEvent -FilterHashtable @{LogName='Microsoft-Windows-TerminalServices-LocalSessionManager/Operational'; ID=24} -MaxEvents 1).message
-if ($event24 -match $Fname) {
+if ($event24 -contains $Fname) {
 	#Wait through grace period
 	Start-Sleep -Seconds 240
 	
 	#Checking for reconnect within grace period
 	$event25 = Get-WinEvent -FilterHashtable @{LogName='Microsoft-Windows-TerminalServices-LocalSessionManager/Operational'; ID=25} -MaxEvents 1
 	
-	if ($event25.Properties[0].Value -match $Fname -and $event25.TimeCreated -gt (Get-Date).AddMinutes(-4)) {
+	if ($event25.Properties[0].Value -eq $Fname -and $event25.TimeCreated -gt (Get-Date).AddMinutes(-4)) {
 		Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.MessageBox]::Show('Reconnected; shutdown aborted', 'EC2-Status')
 		#Debug: Write-Output '$U reconnect within grace period detected. Aborting.'
 	} else {
@@ -91,7 +91,7 @@ if ($event24 -match $Fname) {
 	  <Actions Context="Author">
 	    <Exec>
 	      <Command>Powershell.exe</Command>
-	      <Arguments>-Command "$U = 'Administrator'; $Fname = $env:COMPUTERNAME + '\' + $U; $event24 = (Get-WinEvent -FilterHashtable @{LogName='Microsoft-Windows-TerminalServices-LocalSessionManager/Operational'; ID=24} -MaxEvents 1).message; if ($event24 -match $Fname){Start-Sleep -Seconds 240; $event25 = (Get-WinEvent -FilterHashtable @{LogName='Microsoft-Windows-TerminalServices-LocalSessionManager/Operational'; ID=25} -MaxEvents 1); if ($event25.Properties[0].Value -Match $Fname -and $event.TimeCreated -gt (Get-Date).AddMinutes(-4)){Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.MessageBox]::Show('Reconnected; shutdown aborted', 'EC2-Status')}else {shutdown /s /f /t 20 /c 'Admin rdp disconnect detected; Shutting down.'}}"</Arguments>
+	      <Arguments>-Command "$U = 'Administrator'; $Fname = $env:COMPUTERNAME + '\' + $U; $event24 = (Get-WinEvent -FilterHashtable @{LogName='Microsoft-Windows-TerminalServices-LocalSessionManager/Operational'; ID=24} -MaxEvents 1).message; if ($event24 -contains $Fname){Start-Sleep -Seconds 240; $event25 = (Get-WinEvent -FilterHashtable @{LogName='Microsoft-Windows-TerminalServices-LocalSessionManager/Operational'; ID=25} -MaxEvents 1); if ($event25.Properties[0].Value -eq $Fname -and $event.TimeCreated -gt (Get-Date).AddMinutes(-4)){Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.MessageBox]::Show('Reconnected; shutdown aborted', 'EC2-Status')}else {shutdown /s /f /t 20 /c 'Admin rdp disconnect detected; Shutting down.'}}"</Arguments>
 	    </Exec>
 	  </Actions>
 	</Task>
