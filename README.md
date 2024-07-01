@@ -17,20 +17,21 @@ Download the EC2-AutoStop XML file, then do the following:
 ## Annotated Powershell Script
 ```Powershell
 #-Command "
-$U = 'Administrator'; 
+$U = 'Administrator';
+$Fname = $Fname = $env:COMPUTERNAME + "\" + $U;
 $event24 = (Get-WinEvent -FilterHashtable @{LogName='Microsoft-Windows-TerminalServices-LocalSessionManager/Operational'; ID=24} -MaxEvents 1).message
-if ($event24 -match $U) {
-	#Wait
+if ($event24 -match $Fname) {
+	#Wait through grace period
 	Start-Sleep -Seconds 240
 	
 	#Checking for reconnect within grace period
 	$event25 = Get-WinEvent -FilterHashtable @{LogName='Microsoft-Windows-TerminalServices-LocalSessionManager/Operational'; ID=25} -MaxEvents 1
 	
-	if ($event25.Properties[0].Value -eq $U -and $event25.TimeCreated -gt (Get-Date).AddMinutes(-4)) {
+	if ($event25.Properties[0].Value -match $Fname -and $event25.TimeCreated -gt (Get-Date).AddMinutes(-4)) {
 		Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.MessageBox]::Show('Reconnected; shutdown aborted', 'EC2-Status')
 		#Debug: Write-Output '$U reconnect within grace period detected. Aborting.'
 	} else {
-		shutdown /s /f /t 0 /c 'Admin rdp disconnect detected; Shutting down.'
+		shutdown /s /f /t 20 /c 'Admin rdp disconnect detected; Shutting down.'
 		#Debug: Write-Output 'No $U reconnect within grace period. Shutting down.'
 	}
 }
@@ -45,54 +46,54 @@ if ($event24 -match $U) {
   <summary>XML Code</summary>
 
     <?xml version="1.0" encoding="UTF-16"?>
-    <Task version="1.4" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
-    <RegistrationInfo>
-      <Date>2024-04-20T16:20:10.6969696</Date>
-      <Author>Administrator</Author>
-      <Description>Automatic Stop-Instance switch for AWS after rdp disconnect.</Description>
-      <URI>\EC2-AutoStop</URI>
-    </RegistrationInfo>
-    <Triggers>
-      <EventTrigger>
-        <StartBoundary>2024-04-20T18:00:00</StartBoundary>
-        <Enabled>true</Enabled>
-        <Subscription>&lt;QueryList&gt;&lt;Query Id="0" Path="Microsoft-Windows-TerminalServices-LocalSessionManager/Operational"&gt;&lt;Select Path="Microsoft-Windows-TerminalServices-LocalSessionManager/Operational"&gt;*[System[Provider[@Name='Microsoft-Windows-TerminalServices-LocalSessionManager'] and EventID=24]]&lt;/Select&gt;&lt;/Query&gt;&lt;/QueryList&gt;</Subscription>
-      </EventTrigger>
-    </Triggers>
-    <Principals>
-      <Principal id="Author">
-        <UserId>S-1-5-21-1115079623-1387137672-2099510147-500</UserId>
-        <LogonType>S4U</LogonType>
-        <RunLevel>HighestAvailable</RunLevel>
-      </Principal>
-    </Principals>
-    <Settings>
-      <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
-      <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
-      <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
-      <AllowHardTerminate>false</AllowHardTerminate>
-      <StartWhenAvailable>true</StartWhenAvailable>
-      <RunOnlyIfNetworkAvailable>false</RunOnlyIfNetworkAvailable>
-      <IdleSettings>
-        <StopOnIdleEnd>true</StopOnIdleEnd>
-        <RestartOnIdle>false</RestartOnIdle>
-      </IdleSettings>
-      <AllowStartOnDemand>false</AllowStartOnDemand>
-      <Enabled>true</Enabled>
-      <Hidden>false</Hidden>
-      <RunOnlyIfIdle>false</RunOnlyIfIdle>
-      <DisallowStartOnRemoteAppSession>false</DisallowStartOnRemoteAppSession>
-      <UseUnifiedSchedulingEngine>true</UseUnifiedSchedulingEngine>
-      <WakeToRun>true</WakeToRun>
-      <ExecutionTimeLimit>PT0S</ExecutionTimeLimit>
-      <Priority>7</Priority>
-    </Settings>
-    <Actions Context="Author">
-      <Exec>
-        <Command>Powershell.exe</Command>
-        <Arguments>-Command "$U = 'Administrator'; $message = (Get-WinEvent -FilterHashtable @{LogName='Microsoft-Windows-TerminalServices-LocalSessionManager/Operational'; ID=24} -MaxEvents 1).message; if ($message -match $U){Start-Sleep -Seconds 240; $event = (Get-WinEvent -FilterHashtable @{LogName='Microsoft-Windows-TerminalServices-LocalSessionManager/Operational'; ID=25} -MaxEvents 1); if ($event.Properties[0].Value -eq $U -and $event.TimeCreated -gt (Get-Date).AddMinutes(-4)){Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.MessageBox]::Show('Reconnected; shutdown aborted', 'EC2-Status')}else {shutdown /s /f /t 0 /c 'Admin rdp disconnect detected; Shutting down.'}}"</Arguments>
-      </Exec>
-    </Actions>
-    </Task>
+	<Task version="1.4" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+	  <RegistrationInfo>
+	    <Date>2024-04-20T16:20:10.6969696</Date>
+	    <Author>Administrator</Author>
+	    <Description>Automatic Stop-Instance switch for AWS after rdp disconnect.</Description>
+	    <URI>\EC2-AutoStop</URI>
+	  </RegistrationInfo>
+	  <Triggers>
+	    <EventTrigger>
+	      <StartBoundary>2024-04-20T18:00:00</StartBoundary>
+	      <Enabled>true</Enabled>
+	      <Subscription>&lt;QueryList&gt;&lt;Query Id="0" Path="Microsoft-Windows-TerminalServices-LocalSessionManager/Operational"&gt;&lt;Select Path="Microsoft-Windows-TerminalServices-LocalSessionManager/Operational"&gt;*[System[Provider[@Name='Microsoft-Windows-TerminalServices-LocalSessionManager'] and EventID=24]]&lt;/Select&gt;&lt;/Query&gt;&lt;/QueryList&gt;</Subscription>
+	    </EventTrigger>
+	  </Triggers>
+	  <Principals>
+	    <Principal id="Author">
+	      <UserId>S-1-5-21-1115079623-1387137672-2099510147-500</UserId>
+	      <LogonType>S4U</LogonType>
+	      <RunLevel>HighestAvailable</RunLevel>
+	    </Principal>
+	  </Principals>
+	  <Settings>
+	    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
+	    <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
+	    <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
+	    <AllowHardTerminate>false</AllowHardTerminate>
+	    <StartWhenAvailable>true</StartWhenAvailable>
+	    <RunOnlyIfNetworkAvailable>false</RunOnlyIfNetworkAvailable>
+	    <IdleSettings>
+	      <StopOnIdleEnd>true</StopOnIdleEnd>
+	      <RestartOnIdle>false</RestartOnIdle>
+	    </IdleSettings>
+	    <AllowStartOnDemand>false</AllowStartOnDemand>
+	    <Enabled>true</Enabled>
+	    <Hidden>false</Hidden>
+	    <RunOnlyIfIdle>false</RunOnlyIfIdle>
+	    <DisallowStartOnRemoteAppSession>false</DisallowStartOnRemoteAppSession>
+	    <UseUnifiedSchedulingEngine>true</UseUnifiedSchedulingEngine>
+	    <WakeToRun>true</WakeToRun>
+	    <ExecutionTimeLimit>PT0S</ExecutionTimeLimit>
+	    <Priority>7</Priority>
+	  </Settings>
+	  <Actions Context="Author">
+	    <Exec>
+	      <Command>Powershell.exe</Command>
+	      <Arguments>-Command "$U = 'Administrator'; $Fname = $env:COMPUTERNAME + '\' + $U; $event24 = (Get-WinEvent -FilterHashtable @{LogName='Microsoft-Windows-TerminalServices-LocalSessionManager/Operational'; ID=24} -MaxEvents 1).message; if ($event24 -match $Fname){Start-Sleep -Seconds 240; $event25 = (Get-WinEvent -FilterHashtable @{LogName='Microsoft-Windows-TerminalServices-LocalSessionManager/Operational'; ID=25} -MaxEvents 1); if ($event25.Properties[0].Value -Match $Fname -and $event.TimeCreated -gt (Get-Date).AddMinutes(-4)){Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.MessageBox]::Show('Reconnected; shutdown aborted', 'EC2-Status')}else {shutdown /s /f /t 20 /c 'Admin rdp disconnect detected; Shutting down.'}}"</Arguments>
+	    </Exec>
+	  </Actions>
+	</Task>
 
 </details>
