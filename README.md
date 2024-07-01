@@ -19,8 +19,8 @@ Download the EC2-AutoStop XML file, then do the following:
 #-Command "
 $U = 'Administrator';
 $Fname = $env:COMPUTERNAME + "\" + $U;
-$event24 = (Get-WinEvent -FilterHashtable @{LogName='Microsoft-Windows-TerminalServices-LocalSessionManager/Operational'; ID=24} -MaxEvents 1).message
-if ($event24 -contains $Fname) {
+$event24 = (Get-WinEvent -FilterHashtable @{LogName='Microsoft-Windows-TerminalServices-LocalSessionManager/Operational'; ID=24} -MaxEvents 1)
+if ($event24.Properties[0].Value -eq $Fname) {
 	#Wait through grace period
 	Start-Sleep -Seconds 240
 	
@@ -91,7 +91,7 @@ if ($event24 -contains $Fname) {
 	  <Actions Context="Author">
 	    <Exec>
 	      <Command>Powershell.exe</Command>
-	      <Arguments>-Command "$U = 'Administrator'; $Fname = $env:COMPUTERNAME + '\' + $U; $event24 = (Get-WinEvent -FilterHashtable @{LogName='Microsoft-Windows-TerminalServices-LocalSessionManager/Operational'; ID=24} -MaxEvents 1).message; if ($event24 -contains $Fname){Start-Sleep -Seconds 240; $event25 = (Get-WinEvent -FilterHashtable @{LogName='Microsoft-Windows-TerminalServices-LocalSessionManager/Operational'; ID=25} -MaxEvents 1); if ($event25.Properties[0].Value -eq $Fname -and $event.TimeCreated -gt (Get-Date).AddMinutes(-4)){Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.MessageBox]::Show('Reconnected; shutdown aborted', 'EC2-Status')}else {shutdown /s /f /t 20 /c 'Admin rdp disconnect detected; Shutting down.'}}"</Arguments>
+	      <Arguments>-Command "$U = 'Administrator'; $Fname = $env:COMPUTERNAME + '\' + $U; $event24 = (Get-WinEvent -FilterHashtable @{LogName='Microsoft-Windows-TerminalServices-LocalSessionManager/Operational'; ID=24} -MaxEvents 1); if ($event24.Properties[0].Value -eq $Fname){Start-Sleep -Seconds 240; $event25 = (Get-WinEvent -FilterHashtable @{LogName='Microsoft-Windows-TerminalServices-LocalSessionManager/Operational'; ID=25} -MaxEvents 1); if ($event25.Properties[0].Value -eq $Fname -and $event.TimeCreated -gt (Get-Date).AddMinutes(-4)){Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.MessageBox]::Show('Reconnected; shutdown aborted', 'EC2-Status')}else {shutdown /s /f /t 20 /c 'Admin rdp disconnect detected; Shutting down.'}}"</Arguments>
 	    </Exec>
 	  </Actions>
 	</Task>
