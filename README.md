@@ -45,7 +45,7 @@ if ($event24.Properties[0].Value -eq $Fname) {
 <details>
   <summary>XML Code</summary>
 
-    <?xml version="1.0" encoding="UTF-16"?>
+	    <?xml version="1.0" encoding="UTF-16"?>
 	<Task version="1.4" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
 	  <RegistrationInfo>
 	    <Date>2024-04-20T16:20:10.6969696</Date>
@@ -95,5 +95,4 @@ if ($event24.Properties[0].Value -eq $Fname) {
 	    </Exec>
 	  </Actions>
 	</Task>
-
 </details>
