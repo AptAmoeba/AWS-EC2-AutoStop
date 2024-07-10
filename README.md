@@ -62,7 +62,7 @@ if ($event24.Properties[0].Value -eq $Fname) {
 	  </Triggers>
 	  <Principals>
 	    <Principal id="Author">
-	      <UserId>S-1-5-21-1115079623-1387137672-2099510147-500</UserId>
+	      <UserId>Administrator</UserId>
 	      <LogonType>S4U</LogonType>
 	      <RunLevel>HighestAvailable</RunLevel>
 	    </Principal>
