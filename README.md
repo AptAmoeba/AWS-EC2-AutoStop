@@ -6,7 +6,7 @@ Scheduled task created to automatically stop an EC2 instance by monitoring Event
 ## Description
 This is a Scheduled task that triggers on Event ID 24 (RDP Disconnect), which runs a powershell script that compares the most recent disconnect user to the EC2 connect user that you specify ($U; Default: Administrator).<br> The script waits for 4 minutes as a grace period to reconnect (auto-aborting if it detects Event ID 25 for $U), otherwise it shuts the EC2 down.  
 
-### Installation:
+## Installation:
 Obtain the EC2-AutoStop XML file (file available above, or [build it yourself](#task-xml) below), then do the following:
 
 1.) Open Task Scheduler<br>
